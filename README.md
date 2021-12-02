@@ -33,4 +33,30 @@ The amount of instances that the model made predictions for.
 #### `model_exception_count` (Counter)
 The amount of times the model threw an exception while predicting for new instances
 
+### Categorical encoder monitoring
+In the example below we've used the `OneHotEncoder`, but this also works for the `OrdinalEncoder`
+
+```python
+from skprometheus.pipeline import make_pipeline
+from skprometheus.preprocessing import OneHotEncoder
+
+clf_pipeline = make_pipeline(
+  OneHotEncoder(),
+  LogisticRegression(),
+)
+```
+
+#### `model_categorical_count{feature='...', category='...', action='transform'}` (Counter) 
+Counts the number of times each `category` is observed for each `feature` when `transform` is called on the encoder
+Note that apart from the categories observed in the training data, an additional category called `missing` is added as a label. This counter gets increased
+whenever transform is called on data that contains a category that wasn't observed during training time.
+
+#### `model_categorical_count{feature='...', category='...', action='fit'}` (Gauge) 
+Counts the number of times each `category` is observed for each `feature` when the encoder is fitted. TODO: fit time metrics need to be worked out further!
+
+
+
+
+
+
 
