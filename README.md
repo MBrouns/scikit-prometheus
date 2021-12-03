@@ -27,10 +27,10 @@ For every instance that passed through `predict`, the time it took to make a pre
 
 We don't automatically infer the buckets of the histogram. The disadvantage there is that a new model fit will therefore have new hist buckets which make tracking different models over time difficult
 
-#### `model_predict_count` (Counter)
+#### `model_predict_total` (Counter)
 The amount of instances that the model made predictions for.
 
-#### `model_exception_count` (Counter)
+#### `model_exception_total` (Counter)
 The amount of times the model threw an exception while predicting for new instances
 
 ### Categorical encoder monitoring
@@ -46,12 +46,12 @@ clf_pipeline = make_pipeline(
 )
 ```
 
-#### `model_categorical_count{feature='...', category='...', action='transform'}` (Counter) 
+#### `model_categorical_total{feature='...', category='...', action='transform'}` (Counter) 
 Counts the number of times each `category` is observed for each `feature` when `transform` is called on the encoder
 Note that apart from the categories observed in the training data, an additional category called `missing` is added as a label. This counter gets increased
 whenever transform is called on data that contains a category that wasn't observed during training time.
 
-#### `model_categorical_count{feature='...', category='...', action='fit'}` (Gauge) 
+#### `model_categorical_total{feature='...', category='...', action='fit'}` (Gauge) 
 Counts the number of times each `category` is observed for each `feature` when the encoder is fitted. TODO: fit time metrics need to be worked out further!
 
 
