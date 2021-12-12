@@ -1,6 +1,9 @@
 # scikit-prometheus
 
-The main goal for this project is to make it easy to add basic Prometheus instrumentation to your `sklearn` models. This way we can lower the entry barrier for instrumenting ML systems and thereby raise the quality of ML in production.
+The main goal for this project is to make it easy to add basic Prometheus instrumentation to your `sklearn` models. 
+This way we can lower the entry barrier for instrumenting ML systems and thereby raise the quality of ML in production.
+
+
 
 
 
