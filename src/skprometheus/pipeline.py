@@ -2,6 +2,7 @@ from sklearn import pipeline
 from sklearn.utils.metaestimators import available_if
 from prometheus_client import Histogram, Counter
 from skprometheus.utils import probas_to_metric
+from skprometheus.prom_client_utils import observe_many, add_labels
 
 
 def _final_estimator_has(attr):
@@ -43,47 +44,59 @@ class Pipeline(pipeline.Pipeline):
         memory=None,
         verbose=False,
         *,
-        prom_labels={},
+        prom_labels=None,
         latency_buckets=DEFAULT_LATENCY_BUCKETS,
         proba_buckets=DEFAULT_PROBA_BUCKETS,
     ):
-        self.prom_labels = prom_labels
+        self.prom_labels = prom_labels or {}
         self.latency_buckets = latency_buckets
         self.proba_buckets = proba_buckets
         self._model_predict_total = Counter(
             "model_predict_total",
             "Amount of instances that the model made predictions for.",
-            labelnames=tuple(self.prom_labels.keys()) if self.prom_labels is not None else ()
+            labelnames=tuple(self.prom_labels.keys())
         )
         self._model_predict_latency = Histogram(
             "model_predict_latency_seconds",
             "Time in seconds it takes to call `predict` on the model",
-            labelnames=tuple(self.prom_labels.keys()) if self.prom_labels is not None else (),
+            labelnames=tuple(self.prom_labels.keys()),
             buckets=latency_buckets
         )
         self._model_predict_proba = Histogram(
             "model_predict_probas",
             "Prediction probability for each class of the model",
-            labelnames=(tuple(self.prom_labels.keys()) if self.prom_labels is not None else ()) + ("class_",),
+            labelnames=tuple(self.prom_labels.keys()) + ("class",),
             buckets=proba_buckets
         )
         super().__init__(steps=steps, memory=memory, verbose=verbose)
 
-    @available_if(_final_estimator_has( "predict"))
+
+
+    @available_if(_final_estimator_has("predict"))
     def predict(self, X, **predict_params):
+        """
+        Predict method that adds the model latency and model probabilities to
+        prometheus metric registry.
+        """
+        #TODO Try, except for model_exception_total?
         self._model_predict_total.inc()
-        last_step = self.steps[-1][1]
+        with add_labels(self._model_predict_latency.time(), self.prom_labels):
+            X_transformed = X
+            for _, _, transformer in self._iter(with_final=False):
+                X_transformed = transformer.transform(X_transformed)
 
-        if hasattr(last_step, "predict_proba"):
-            predict_probas = super().predict_proba(X, **predict_params) #**predict_parms not applicable here?
-            #probas_to_metric(self._model_predict_proba, predict_probas, last_step.classes_, **self.prom_labels)
-            for idx, class_ in enumerate(last_step.classes_):
-                for proba in predict_probas: #TODO extract this to utils func
-                    self._model_predict_proba.labels(class_=class_, **self.prom_labels).observe(proba[idx])
+            final_step = self.steps[-1][1]
 
-        with self._model_predict_latency.time():
-            return super().predict(X, **predict_params)
+            if hasattr(final_step, "predict_proba"):
+                predict_probas = final_step.predict_proba(X_transformed, **predict_params)
+                for idx, class_ in enumerate(final_step.classes_):
+                    prom_labels = {
+                        "class": class_,
+                        **self.prom_labels
+                    }
+                    observe_many(
+                        add_labels(self._model_predict_proba, prom_labels),
+                        predict_probas[:, idx]
+                    )
 
-
-
-# Try, except for model_exception_total?
+            return final_step.predict(X_transformed, **predict_params)
