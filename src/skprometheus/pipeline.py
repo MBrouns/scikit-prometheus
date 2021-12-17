@@ -71,7 +71,6 @@ class Pipeline(pipeline.Pipeline):
         )
         super().__init__(steps=steps, memory=memory, verbose=verbose)
 
-
     @available_if(_final_estimator_has("predict"))
     def predict(self, X, **predict_params):
         """
