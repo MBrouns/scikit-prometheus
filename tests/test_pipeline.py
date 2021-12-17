@@ -6,14 +6,14 @@ from skprometheus.pipeline import Pipeline
 from tests.utils import FixedLatencyClassifier, FixedProbasClassifier
 import pytest
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def unregister_collectors():
     collectors = list(REGISTRY._collector_to_names.keys())
     for collector in collectors:
         REGISTRY.unregister(collector)
 
 
-def test_pipeline_latency(unregister_collectors):
+def test_pipeline_latency():
     pipeline = Pipeline([
         ('clf', FixedLatencyClassifier(0.095))
     ])
@@ -24,7 +24,7 @@ def test_pipeline_latency(unregister_collectors):
     assert REGISTRY.get_sample_value('model_predict_latency_seconds_bucket', {'le': '0.1'}) == 1
 
 
-def test_pipeline_probas(unregister_collectors):
+def test_pipeline_probas():
     probas = np.array([
             [0.2, 0.2, 0.5, 0.1],
             [0.4, 0.6, 0., 0.]

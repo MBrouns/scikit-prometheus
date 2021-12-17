@@ -1,7 +1,6 @@
 from sklearn import pipeline
 from sklearn.utils.metaestimators import available_if
 from prometheus_client import Histogram, Counter
-from skprometheus.utils import probas_to_metric
 from skprometheus.prom_client_utils import observe_many, add_labels
 
 
@@ -25,6 +24,8 @@ def make_pipeline(*steps, memory=None, verbose=False):
     This is a shorthand for the :class:`Pipeline` constructor; it does not
     require, and does not permit, naming the estimators. Instead, their names
     will be set to the lowercase of their types automatically.
+
+    This method also does not allow the setting of additional labels to your prometheus metrics.
     """
     return Pipeline(pipeline._name_estimators(steps), memory=memory, verbose=verbose)
 
