@@ -1,5 +1,4 @@
 import time
-
 import numpy as np
 from prometheus_client import REGISTRY
 from sklearn.base import BaseEstimator, ClassifierMixin

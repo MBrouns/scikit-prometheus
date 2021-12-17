@@ -1,10 +1,9 @@
 import numpy as np
-from prometheus_client import REGISTRY, CollectorRegistry
-import prometheus_client
-
+from prometheus_client import REGISTRY
 from skprometheus.pipeline import Pipeline
 from tests.utils import FixedLatencyClassifier, FixedProbasClassifier
 import pytest
+
 
 @pytest.fixture(autouse=True)
 def unregister_collectors():
@@ -40,5 +39,3 @@ def test_pipeline_probas():
 
     assert REGISTRY.get_sample_value('model_predict_probas_bucket', {'le': '0.6', 'class': '0'}) == 2
     assert REGISTRY.get_sample_value('model_predict_probas_bucket', {'le': '0.3', 'class': '2'}) == 1
-
-

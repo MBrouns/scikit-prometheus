@@ -72,14 +72,13 @@ class Pipeline(pipeline.Pipeline):
         super().__init__(steps=steps, memory=memory, verbose=verbose)
 
 
-
     @available_if(_final_estimator_has("predict"))
     def predict(self, X, **predict_params):
         """
         Predict method that adds the model latency and model probabilities to
         prometheus metric registry.
         """
-        #TODO Try, except for model_exception_total?
+        # TODO Try, except for model_exception_total?
         self._model_predict_total.inc()
         with add_labels(self._model_predict_latency.time(), self.prom_labels):
             X_transformed = X
