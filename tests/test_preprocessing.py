@@ -20,4 +20,3 @@ def test_OneHotEncoder():
 
     assert REGISTRY.get_sample_value('model_categorical_count_total', {'feature': '2', 'category': '4'}) == 2
     assert REGISTRY.get_sample_value('model_categorical_count_total', {'feature': '3', 'category': '9'}) == 1
-

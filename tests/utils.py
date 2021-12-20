@@ -4,6 +4,7 @@ from prometheus_client import REGISTRY
 from sklearn.base import BaseEstimator, ClassifierMixin
 import pytest
 
+
 class FixedLatencyClassifier(ClassifierMixin, BaseEstimator):
     def __init__(self, latency):
         self.latency = latency
