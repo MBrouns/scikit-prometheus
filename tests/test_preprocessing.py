@@ -38,6 +38,7 @@ def test_OneHotEncoder_pandas():
 
     assert REGISTRY.get_sample_value('model_categorical_count_total', {'feature': 'C', 'category': '4'}) == 2
 
+
 def test_OneHotEncoder_missing():
     one_hot = OneHotEncoder(handle_unknown='ignore')
     X = np.array([
