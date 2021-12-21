@@ -57,6 +57,11 @@ class Pipeline(pipeline.Pipeline):
             "Amount of instances that the model made predictions for.",
             labelnames=tuple(self.prom_labels.keys())
         )
+        self._model_exception = Counter(
+            "model_exception",
+            "Amount of exceptions during predict step.",
+            labelnames=tuple(self.prom_labels.keys())
+        )
         self._model_predict_latency = Histogram(
             "model_predict_latency_seconds",
             "Time in seconds it takes to call `predict` on the model",
@@ -77,25 +82,28 @@ class Pipeline(pipeline.Pipeline):
         Predict method that adds the model latency and model probabilities to
         prometheus metric registry.
         """
-        # TODO Try, except for model_exception_total?
-        self._model_predict.inc()
-        with add_labels(self._model_predict_latency.time(), self.prom_labels):
-            X_transformed = X
-            for _, _, transformer in self._iter(with_final=False):
-                X_transformed = transformer.transform(X_transformed)
+        try:
+            self._model_predict.inc()
+            with add_labels(self._model_predict_latency.time(), self.prom_labels):
+                X_transformed = X
+                for _, _, transformer in self._iter(with_final=False):
+                    X_transformed = transformer.transform(X_transformed)
 
-            final_step = self.steps[-1][1]
+                final_step = self.steps[-1][1]
 
-            if hasattr(final_step, "predict_proba"):
-                predict_probas = final_step.predict_proba(X_transformed, **predict_params)
-                for idx, class_ in enumerate(final_step.classes_):
-                    prom_labels = {
-                        "class": class_,
-                        **self.prom_labels
-                    }
-                    observe_many(
-                        add_labels(self._model_predict_proba, prom_labels),
-                        predict_probas[:, idx]
-                    )
+                if hasattr(final_step, "predict_proba"):
+                    predict_probas = final_step.predict_proba(X_transformed, **predict_params)
+                    for idx, class_ in enumerate(final_step.classes_):
+                        prom_labels = {
+                            "class": class_,
+                            **self.prom_labels
+                        }
+                        observe_many(
+                            add_labels(self._model_predict_proba, prom_labels),
+                            predict_probas[:, idx]
+                        )
 
-            return final_step.predict(X_transformed, **predict_params)
+                return final_step.predict(X_transformed, **predict_params)
+        except Exception as err:
+            self._model_exception.inc()
+            raise err

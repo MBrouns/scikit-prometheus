@@ -1,7 +1,7 @@
 import numpy as np
 from prometheus_client import REGISTRY
 from skprometheus.pipeline import Pipeline
-from tests.utils import FixedLatencyClassifier, FixedProbasClassifier
+from tests.utils import FixedLatencyClassifier, FixedProbasClassifier, ErrorClassifier
 
 
 def test_pipeline_latency():
@@ -31,3 +31,16 @@ def test_pipeline_probas():
 
     assert REGISTRY.get_sample_value('model_predict_probas_bucket', {'le': '0.6', 'class': '0'}) == 2
     assert REGISTRY.get_sample_value('model_predict_probas_bucket', {'le': '0.3', 'class': '2'}) == 1
+
+
+def test_pipeline_exceptions():
+    pipeline = Pipeline([
+        ('clf', ErrorClassifier())
+    ])
+    for i in range(4):
+        try:
+            pipeline.predict(np.ones((15, 3)))
+        except ValueError:
+            continue
+
+    assert REGISTRY.get_sample_value('model_exception_total') == 4
