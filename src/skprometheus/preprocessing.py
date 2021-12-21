@@ -24,11 +24,7 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
         transformed_X = super().transform(X)
         features = _get_feature_names(X)
 
-        # _get_feature_names returns None or np.array.
-        # np.array has no truth value, so we need this ugly contraption to determine if feature names are provided.
-        if features is not None:
-            ...
-        else:
+        if features is None:
             features = list(range(X.shape[1]))
 
         # Use inverse method on transformed_X to get all missing values back as 'None'
