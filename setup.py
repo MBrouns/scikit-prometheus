@@ -18,6 +18,7 @@ test_packages = [  # we need extras packages for their tests
     "pytest-cov>=2.6.1",
     "pytest-mock>=1.6.3",
     "pre-commit>=1.18.3",
+    "pandas>=1.3.5",
 ]
 
 dev_packages = docs_packages + test_packages

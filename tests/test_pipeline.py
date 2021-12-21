@@ -1,7 +1,7 @@
 import numpy as np
 from prometheus_client import REGISTRY
 from skprometheus.pipeline import Pipeline
-from tests.utils import FixedLatencyClassifier, FixedProbasClassifier, unregister_collectors
+from tests.utils import FixedLatencyClassifier, FixedProbasClassifier
 
 
 def test_pipeline_latency():
