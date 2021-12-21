@@ -2,14 +2,6 @@ import numpy as np
 from prometheus_client import REGISTRY
 from skprometheus.pipeline import Pipeline
 from tests.utils import FixedLatencyClassifier, FixedProbasClassifier
-import pytest
-
-
-@pytest.fixture(autouse=True)
-def unregister_collectors():
-    collectors = list(REGISTRY._collector_to_names.keys())
-    for collector in collectors:
-        REGISTRY.unregister(collector)
 
 
 def test_pipeline_latency():
