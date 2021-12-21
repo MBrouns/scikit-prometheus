@@ -14,12 +14,12 @@ def test_OneHotEncoder():
         [6, 7, 8, 9]
     ])
 
-    assert 'model_categorical_count' in [m.name for m in REGISTRY.collect()]
+    assert 'model_categorical' in [m.name for m in REGISTRY.collect()]
     one_hot.fit(X)
     one_hot.transform(X)
 
-    assert REGISTRY.get_sample_value('model_categorical_count_total', {'feature': '2', 'category': '4'}) == 2
-    assert REGISTRY.get_sample_value('model_categorical_count_total', {'feature': '3', 'category': '9'}) == 1
+    assert REGISTRY.get_sample_value('model_categorical_total', {'feature': '2', 'category': '4'}) == 2
+    assert REGISTRY.get_sample_value('model_categorical_total', {'feature': '3', 'category': '9'}) == 1
 
 
 def test_OneHotEncoder_pandas():
@@ -36,7 +36,7 @@ def test_OneHotEncoder_pandas():
     one_hot_pd.fit(df)
     one_hot_pd.transform(df)
 
-    assert REGISTRY.get_sample_value('model_categorical_count_total', {'feature': 'C', 'category': '4'}) == 2
+    assert REGISTRY.get_sample_value('model_categorical_total', {'feature': 'C', 'category': '4'}) == 2
 
 
 def test_OneHotEncoder_missing():
@@ -59,4 +59,4 @@ def test_OneHotEncoder_missing():
 
     one_hot.transform(X_test)
 
-    assert REGISTRY.get_sample_value('model_categorical_count_total', {'feature': '1', 'category': 'missing'}) == 2
+    assert REGISTRY.get_sample_value('model_categorical_total', {'feature': '1', 'category': 'missing'}) == 2

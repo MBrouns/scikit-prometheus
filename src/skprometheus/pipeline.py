@@ -52,8 +52,8 @@ class Pipeline(pipeline.Pipeline):
         self.prom_labels = prom_labels or {}
         self.latency_buckets = latency_buckets
         self.proba_buckets = proba_buckets
-        self._model_predict_count = Counter(
-            "model_predict_count",
+        self._model_predict = Counter(
+            "model_predict",
             "Amount of instances that the model made predictions for.",
             labelnames=tuple(self.prom_labels.keys())
         )
@@ -78,7 +78,7 @@ class Pipeline(pipeline.Pipeline):
         prometheus metric registry.
         """
         # TODO Try, except for model_exception_total?
-        self._model_predict_count.inc()
+        self._model_predict.inc()
         with add_labels(self._model_predict_latency.time(), self.prom_labels):
             X_transformed = X
             for _, _, transformer in self._iter(with_final=False):

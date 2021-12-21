@@ -9,8 +9,8 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
     """
     def __init__(self, *args, prom_labels=None, **kwargs):
         self.prom_labels = prom_labels or {}
-        self.model_categorical_count = Counter(
-            "model_categorical_count",
+        self.model_categorical = Counter(
+            "model_categorical",
             "Counts category occurrence for each categorical feature.",
             labelnames=tuple(self.prom_labels.keys()) + ("feature", "category")
         )
@@ -38,6 +38,6 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
             for category in row:
                 if not category:
                     category = "missing"
-                self.model_categorical_count.labels(feature=str(features[idx]), category=str(category)).inc()
+                self.model_categorical.labels(feature=str(features[idx]), category=str(category)).inc()
 
         return transformed_X
