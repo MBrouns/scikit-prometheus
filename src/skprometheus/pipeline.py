@@ -1,6 +1,8 @@
 from sklearn import pipeline
 from sklearn.utils.metaestimators import available_if
 from prometheus_client import Histogram, Counter
+
+from skprometheus.metrics import MODEL_PREDICT_TOTAL, MetricRegistry
 from skprometheus.utils import probas_to_metric
 from skprometheus.prom_client_utils import observe_many, add_labels
 
@@ -51,11 +53,7 @@ class Pipeline(pipeline.Pipeline):
         self.prom_labels = prom_labels or {}
         self.latency_buckets = latency_buckets
         self.proba_buckets = proba_buckets
-        self._model_predict_total = Counter(
-            "model_predict_total",
-            "Amount of instances that the model made predictions for.",
-            labelnames=tuple(self.prom_labels.keys())
-        )
+
         self._model_predict_latency = Histogram(
             "model_predict_latency_seconds",
             "Time in seconds it takes to call `predict` on the model",
@@ -79,7 +77,7 @@ class Pipeline(pipeline.Pipeline):
         prometheus metric registry.
         """
         #TODO Try, except for model_exception_total?
-        self._model_predict_total.inc()
+        MetricRegistry.model_predict_total.inc()
         with add_labels(self._model_predict_latency.time(), self.prom_labels):
             X_transformed = X
             for _, _, transformer in self._iter(with_final=False):
