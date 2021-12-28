@@ -1,7 +1,7 @@
 from sklearn import pipeline
 from sklearn.utils.metaestimators import available_if
-from prometheus_client import Histogram, Counter
 from skprometheus.prom_client_utils import observe_many, add_labels
+from skprometheus.metrics import MetricRegistry
 
 
 def _final_estimator_has(attr):
@@ -42,38 +42,10 @@ class Pipeline(pipeline.Pipeline):
     def __init__(
         self,
         steps,
+        *,
         memory=None,
         verbose=False,
-        *,
-        prom_labels=None,
-        latency_buckets=DEFAULT_LATENCY_BUCKETS,
-        proba_buckets=DEFAULT_PROBA_BUCKETS,
     ):
-        self.prom_labels = prom_labels or {}
-        self.latency_buckets = latency_buckets
-        self.proba_buckets = proba_buckets
-        self._model_predict = Counter(
-            "model_predict",
-            "Amount of instances that the model made predictions for.",
-            labelnames=tuple(self.prom_labels.keys())
-        )
-        self._model_exception = Counter(
-            "model_exception",
-            "Amount of exceptions during predict step.",
-            labelnames=tuple(self.prom_labels.keys())
-        )
-        self._model_predict_latency = Histogram(
-            "model_predict_latency_seconds",
-            "Time in seconds it takes to call `predict` on the model",
-            labelnames=tuple(self.prom_labels.keys()),
-            buckets=latency_buckets
-        )
-        self._model_predict_proba = Histogram(
-            "model_predict_probas",
-            "Prediction probability for each class of the model",
-            labelnames=tuple(self.prom_labels.keys()) + ("class",),
-            buckets=proba_buckets
-        )
         super().__init__(steps=steps, memory=memory, verbose=verbose)
 
     @available_if(_final_estimator_has("predict"))
@@ -83,8 +55,8 @@ class Pipeline(pipeline.Pipeline):
         prometheus metric registry.
         """
         try:
-            self._model_predict.inc()
-            with add_labels(self._model_predict_latency.time(), self.prom_labels):
+            MetricRegistry.model_predict_total.inc()
+            with MetricRegistry.model_predict_latency.time():
                 X_transformed = X
                 for _, _, transformer in self._iter(with_final=False):
                     X_transformed = transformer.transform(X_transformed)
@@ -96,14 +68,13 @@ class Pipeline(pipeline.Pipeline):
                     for idx, class_ in enumerate(final_step.classes_):
                         prom_labels = {
                             "class": class_,
-                            **self.prom_labels
                         }
                         observe_many(
-                            add_labels(self._model_predict_proba, prom_labels),
+                            add_labels(MetricRegistry.model_predict_proba, prom_labels),
                             predict_probas[:, idx]
                         )
 
                 return final_step.predict(X_transformed, **predict_params)
         except Exception as err:
-            self._model_exception.inc()
+            MetricRegistry.model_exception.inc()
             raise err
