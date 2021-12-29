@@ -2,15 +2,14 @@ from prometheus_client import Counter, Histogram
 from skprometheus.prom_client_utils import add_labels
 
 
-# Do we want the metricRegistry to be automatically loaded unless specified otherwise?  --> Yes
-
-
 class _MetricRegistry:
+    """Object for initiation and upkeep of metrics. Necessary for avoiding assignment and label conflicts."""
     def __init__(self):
         self.labels = set()
         self.metrics_initialized = False
         self.current_labels = {}
-        self.DEFAULT_LATENCY_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1., 2.5, 5., 7.5, 10., float('inf'))
+        self.DEFAULT_LATENCY_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25,
+                                        0.5, 0.75, 1., 2.5, 5., 7.5, 10., float('inf'))
         self.DEFAULT_PROBA_BUCKETS = (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
 
     def set_labels(self, labels):
@@ -37,7 +36,7 @@ class _MetricRegistry:
         self._model_predict_proba = Histogram(
             "model_predict_probas",
             "Prediction probability for each class of the model",
-            labelnames=tuple(self.labels) + ("class",),
+            labelnames=tuple(self.labels) + ("class_",),
             buckets=self.DEFAULT_PROBA_BUCKETS
         )
         self._model_exception = Counter(
@@ -48,37 +47,30 @@ class _MetricRegistry:
 
     def label(self, **labels):
         self.current_labels = labels
+        return self
 
     def __enter__(self):
-        return
+        return self
 
     def __exit__(self, type, value, traceback):
         self.current_labels = {}
 
-    @property
     def model_predict_total(self):
-        self._init_metrics() #_init method for each metric?s
+        self._init_metrics()
         return add_labels(self._model_predict, self.current_labels)
 
-    @property
     def model_predict_latency(self):
         self._init_metrics()
         return add_labels(self._model_predict_latency, self.current_labels)
 
-    @property
-    def model_predict_proba(self):
+    def model_predict_proba(self, **labels):
         self._init_metrics()
-        return add_labels(self._model_predict_proba, self.current_labels)
+        labels = dict(labels, **self.current_labels)
+        return add_labels(self._model_predict_proba, labels)
 
-    @property
     def model_exception(self):
         self._init_metrics()
         return add_labels(self._model_exception, self.current_labels)
 
 
 MetricRegistry = _MetricRegistry()
-
-
-def reset_metric_registry():
-    global MetricRegistry
-    MetricRegistry = _MetricRegistry()

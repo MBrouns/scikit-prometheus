@@ -1,6 +1,6 @@
 from sklearn import pipeline
 from sklearn.utils.metaestimators import available_if
-from skprometheus.prom_client_utils import observe_many, add_labels
+from skprometheus.prom_client_utils import observe_many
 from skprometheus.metrics import MetricRegistry
 
 
@@ -30,23 +30,10 @@ def make_pipeline(*steps, memory=None, verbose=False):
     return Pipeline(pipeline._name_estimators(steps), memory=memory, verbose=verbose)
 
 
-DEFAULT_LATENCY_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1., 2.5, 5., 7.5, 10., float('inf'))
-DEFAULT_PROBA_BUCKETS = (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-
-
 class Pipeline(pipeline.Pipeline):
     """
     A pipeline that adds metrics to the prometheus metric registry.
     """
-
-    def __init__(
-        self,
-        steps,
-        *,
-        memory=None,
-        verbose=False,
-    ):
-        super().__init__(steps=steps, memory=memory, verbose=verbose)
 
     @available_if(_final_estimator_has("predict"))
     def predict(self, X, **predict_params):
@@ -55,8 +42,8 @@ class Pipeline(pipeline.Pipeline):
         prometheus metric registry.
         """
         try:
-            MetricRegistry.model_predict_total.inc()
-            with MetricRegistry.model_predict_latency.time():
+            MetricRegistry.model_predict_total().inc()
+            with MetricRegistry.model_predict_latency().time():
                 X_transformed = X
                 for _, _, transformer in self._iter(with_final=False):
                     X_transformed = transformer.transform(X_transformed)
@@ -66,15 +53,12 @@ class Pipeline(pipeline.Pipeline):
                 if hasattr(final_step, "predict_proba"):
                     predict_probas = final_step.predict_proba(X_transformed, **predict_params)
                     for idx, class_ in enumerate(final_step.classes_):
-                        prom_labels = {
-                            "class": class_,
-                        }
                         observe_many(
-                            add_labels(MetricRegistry.model_predict_proba, prom_labels),
+                            MetricRegistry.model_predict_proba(class_=class_),
                             predict_probas[:, idx]
                         )
 
                 return final_step.predict(X_transformed, **predict_params)
         except Exception as err:
-            MetricRegistry.model_exception.inc()
+            MetricRegistry.model_exception().inc()
             raise err
