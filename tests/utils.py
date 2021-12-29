@@ -31,5 +31,16 @@ class FixedProbasClassifier(ClassifierMixin, BaseEstimator):
         return self.probas
 
 
+class ErrorClassifier(ClassifierMixin, BaseEstimator):
+    def __init__(self):
+        ...
+
+    def fit(self, X, y=None):
+        return self
+
+    def predict(self, X):
+        raise ValueError()
+
+
 def metric_exists(metric_name, registry=REGISTRY):
     ...
