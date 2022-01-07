@@ -14,9 +14,9 @@ def test_OneHotEncoder():
         [6, 7, 8, 9]
     ])
 
-    assert 'model_categorical' in [m.name for m in REGISTRY.collect()]
     one_hot.fit(X)
     one_hot.transform(X)
+    assert 'model_categorical' in [m.name for m in REGISTRY.collect()]
 
     assert REGISTRY.get_sample_value('model_categorical_total', {'feature': '2', 'category': '4'}) == 2
     assert REGISTRY.get_sample_value('model_categorical_total', {'feature': '3', 'category': '9'}) == 1

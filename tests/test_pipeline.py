@@ -47,3 +47,14 @@ def test_pipeline_exceptions():
                 continue
 
         assert REGISTRY.get_sample_value('model_exception_total', {'Test': 'exceptions'}) == 4
+
+
+def test_pipeline_count():
+    pipeline = Pipeline([
+        ('clf', FixedLatencyClassifier(0.095))
+    ])
+    pipeline.predict(np.ones((15, 3)))
+    pipeline.predict(np.ones((22, 3)))
+
+    assert 'model_predict' in [m.name for m in REGISTRY.collect()]
+    assert REGISTRY.get_sample_value('model_predict_total') == 37

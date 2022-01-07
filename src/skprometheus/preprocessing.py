@@ -1,20 +1,12 @@
 from sklearn import preprocessing
-from prometheus_client import Counter
 from sklearn.utils.validation import _get_feature_names
+from skprometheus.metrics import MetricRegistry
 
 
 class OneHotEncoder(preprocessing.OneHotEncoder):
     """
     OneHotEncoder that adds metrics to the prometheus metric registry.
     """
-    def __init__(self, *args, prom_labels=None, **kwargs):
-        self.prom_labels = prom_labels or {}
-        self.model_categorical = Counter(
-            "model_categorical",
-            "Counts category occurrence for each categorical feature.",
-            labelnames=tuple(self.prom_labels.keys()) + ("feature", "category")
-        )
-        super().__init__(*args, **kwargs)
 
     def transform(self, X):
         """
@@ -34,6 +26,6 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
             for category in row:
                 if not category:
                     category = "missing"
-                self.model_categorical.labels(feature=str(features[idx]), category=str(category)).inc()
+                MetricRegistry.model_categorical(feature=str(features[idx]), category=str(category)).inc()
 
         return transformed_X
