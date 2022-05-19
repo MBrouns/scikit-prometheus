@@ -2,6 +2,7 @@ import numpy as np
 from sklearn import preprocessing
 from sklearn.utils.validation import _get_feature_names
 from skprometheus.metrics import MetricRegistry
+from skprometheus.utils import get_feature_names
 
 
 class OneHotEncoder(preprocessing.OneHotEncoder):
@@ -30,10 +31,7 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
         metric registry.
         """
         transformed_X = super().transform(X)
-        features = _get_feature_names(X)
-
-        if features is None:
-            features = list(range(X.shape[1]))
+        features = get_feature_names(X)
 
         # Use inverse method on transformed_X to get all missing values back as 'None'
         categories = self.inverse_transform(transformed_X)

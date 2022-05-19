@@ -1,7 +1,24 @@
+import pytest
+
 from skprometheus.preprocessing import OneHotEncoder
 import numpy as np
 from prometheus_client import REGISTRY
 import pandas as pd
+
+from skprometheus.utils import flatten
+from tests.conftest import general_checks, select_tests, transformer_checks
+
+
+@pytest.mark.parametrize(
+    "test_fn",
+    select_tests(
+        flatten([general_checks, transformer_checks]),
+        exclude=["check_fit2d_predict1d"],
+    )
+)
+def test_standard_checks(test_fn):
+    trf = OneHotEncoder()
+    test_fn(OneHotEncoder.__name__, trf)
 
 
 def test_OneHotEncoder():

@@ -3,6 +3,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.utils.validation import _get_feature_names
 
 from skprometheus.metrics import MetricRegistry
+from skprometheus.utils import get_feature_names
 
 
 class SimpleImputer(SimpleImputer):
@@ -27,9 +28,7 @@ class SimpleImputer(SimpleImputer):
         MetricRegistry.add_counter('imputed', "the number of values imputed", additional_labels=('method', 'feature'))
 
     def transform(self, X):
-        features = _get_feature_names(X)
-        if features is None:
-            features = list(range(X.shape[1]))
+        features = get_feature_names(X)
 
         missing = np.isnan(X).sum(axis=0)
         for idx, feature in enumerate(features):

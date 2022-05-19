@@ -1,7 +1,22 @@
+import pytest
+
 from skprometheus.impute import SimpleImputer
+from skprometheus.utils import flatten
 import numpy as np
 from prometheus_client import REGISTRY
 import pandas as pd
+from tests.conftest import general_checks, transformer_checks, select_tests, nonmeta_checks
+
+
+@pytest.mark.parametrize(
+    "test_fn",
+    select_tests(
+        flatten([general_checks, transformer_checks]),
+    )
+)
+def test_standard_checks(test_fn):
+    trf = SimpleImputer()
+    test_fn(SimpleImputer.__name__, trf)
 
 
 def test_simple_imputer():

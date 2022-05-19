@@ -71,13 +71,15 @@ class Pipeline(pipeline.Pipeline):
 
                 if hasattr(final_step, "predict_proba"):
                     predict_probas = final_step.predict_proba(X_transformed, **predict_params)
-                    for idx, class_ in enumerate(final_step.classes_):
-                        observe_many(
-                            MetricRegistry.model_predict_probas(class_=class_),
-                            predict_probas[:, idx]
-                        )
+                    if hasattr(final_step, 'classes_'):
+                        for idx, class_ in enumerate(final_step.classes_):
+                            observe_many(
+                                MetricRegistry.model_predict_probas(class_=class_),
+                                predict_probas[:, idx]
+                            )
                 predictions = final_step.predict(X_transformed, **predict_params)
-                MetricRegistry.model_predict_total().inc(len(predictions))
+                if X is not None:
+                    MetricRegistry.model_predict_total().inc(len(X))
                 return predictions
         except Exception as err:
             MetricRegistry.model_exception().inc()

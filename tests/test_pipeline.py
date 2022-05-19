@@ -9,7 +9,7 @@ def test_pipeline_latency():
     MetricRegistry.set_labels(['Test'])
     with MetricRegistry.label(Test='latency'):
         pipeline = Pipeline([
-            ('clf', FixedLatencyClassifier(0.095))
+            ('clf', FixedLatencyClassifier(0.07))
         ])
         pipeline.predict(np.ones((15, 3)))
 

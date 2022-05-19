@@ -15,6 +15,8 @@ class _MetricRegistry:
         self.metrics = SimpleNamespace()
 
     def _add_metric(self, metric_type, name, description, additional_labels, **metric_kwargs):
+        if hasattr(self.metrics, name):
+            return
         additional_labels = additional_labels or tuple()
         setattr(self.metrics, name, metric_type(
             self.prefix + name,
