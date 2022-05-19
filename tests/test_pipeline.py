@@ -14,7 +14,10 @@ def test_pipeline_latency():
         pipeline.predict(np.ones((15, 3)))
 
         assert 'skprom_model_predict_latency_seconds' in [m.name for m in REGISTRY.collect()]
-        assert REGISTRY.get_sample_value('skprom_model_predict_latency_seconds_bucket', {'le': '0.1', 'Test': 'latency'}) == 1
+        assert REGISTRY.get_sample_value(
+            'skprom_model_predict_latency_seconds_bucket',
+            {'le': '0.1', 'Test': 'latency'}
+        ) == 1
 
 
 def test_pipeline_probas():
