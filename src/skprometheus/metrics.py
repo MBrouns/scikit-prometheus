@@ -1,8 +1,6 @@
-from functools import partial
 from types import SimpleNamespace
 
 from prometheus_client import Counter, Histogram
-from skprometheus.prom_client_utils import add_labels
 
 
 class _MetricRegistry:
@@ -18,7 +16,13 @@ class _MetricRegistry:
 
     def _add_metric(self, metric_type, name, description, additional_labels, **metric_kwargs):
         additional_labels = additional_labels or tuple()
-        setattr(self.metrics, name, metric_type(self.prefix + name, description, tuple(self.labels) + additional_labels, **metric_kwargs))
+        setattr(self.metrics, name, metric_type(
+            self.prefix + name,
+            description,
+            tuple(self.labels) + additional_labels,
+            **metric_kwargs
+            )
+        )
 
     def add_histogram(self, name, description, *, buckets, additional_labels=None):
         self._add_metric(Histogram, name, description, additional_labels=additional_labels, buckets=buckets)

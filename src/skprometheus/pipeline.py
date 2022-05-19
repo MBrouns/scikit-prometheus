@@ -1,4 +1,3 @@
-from prometheus_client import Histogram
 from sklearn import pipeline
 from sklearn.utils.metaestimators import available_if
 from skprometheus.prom_client_utils import observe_many
@@ -33,7 +32,7 @@ def make_pipeline(*steps, memory=None, verbose=False):
 
 class Pipeline(pipeline.Pipeline):
     DEFAULT_LATENCY_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25,
-                                    0.5, 0.75, 1., 2.5, 5., 7.5, 10., float('inf'))
+                               0.5, 0.75, 1., 2.5, 5., 7.5, 10., float('inf'))
     DEFAULT_PROBA_BUCKETS = (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
 
     """
