@@ -3,10 +3,11 @@ from skprometheus.prom_client_utils import add_labels
 
 
 class _MetricRegistry:
-    """Object for initiation and upkeep of metrics. Necessary for avoiding assignment and label conflicts."""
+    """Object for initiation and upkeep of metrics. Necessary to avoid assignment and labeling conflicts."""
     def __init__(self):
         self.labels = set()
         self.metrics_initialized = False
+        self.categorical_metrics_initialized = False
         self.current_labels = {}
         self.DEFAULT_LATENCY_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25,
                                         0.5, 0.75, 1., 2.5, 5., 7.5, 10., float('inf'))
@@ -45,6 +46,16 @@ class _MetricRegistry:
             labelnames=tuple(self.labels)
         )
 
+    def _init_categorical_metrics(self):
+        if self.categorical_metrics_initialized:
+            return
+        self.categorical_metrics_initialized = True
+        self._model_categorical = Counter(
+            "model_categorical",
+            "Counts category occurrence for each categorical feature.",
+            labelnames=tuple(self.labels) + ("feature", "category")
+        )
+
     def label(self, **labels):
         self.current_labels = labels
         return self
@@ -71,6 +82,11 @@ class _MetricRegistry:
     def model_exception(self):
         self._init_metrics()
         return add_labels(self._model_exception, self.current_labels)
+
+    def model_categorical(self, **labels):
+        self._init_categorical_metrics()
+        labels = dict(labels, **self.current_labels)
+        return add_labels(self._model_categorical, labels)
 
 
 MetricRegistry = _MetricRegistry()

@@ -18,3 +18,6 @@ def unregister_collectors():
     MetricRegistry.metrics_initialized = False
     MetricRegistry.current_labels = {}
     MetricRegistry.labels = set()
+
+    # Reset categorical
+    MetricRegistry.categorical_metrics_initialized = False

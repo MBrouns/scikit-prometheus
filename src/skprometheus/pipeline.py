@@ -42,7 +42,6 @@ class Pipeline(pipeline.Pipeline):
         prometheus metric registry.
         """
         try:
-            MetricRegistry.model_predict_total().inc()
             with MetricRegistry.model_predict_latency().time():
                 X_transformed = X
                 for _, _, transformer in self._iter(with_final=False):
@@ -57,8 +56,9 @@ class Pipeline(pipeline.Pipeline):
                             MetricRegistry.model_predict_proba(class_=class_),
                             predict_probas[:, idx]
                         )
-
-                return final_step.predict(X_transformed, **predict_params)
+                predictions = final_step.predict(X_transformed, **predict_params)
+                MetricRegistry.model_predict_total().inc(len(predictions))
+                return predictions
         except Exception as err:
             MetricRegistry.model_exception().inc()
             raise err
