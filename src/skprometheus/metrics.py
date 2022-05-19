@@ -1,17 +1,34 @@
+from functools import partial
+from types import SimpleNamespace
+
 from prometheus_client import Counter, Histogram
 from skprometheus.prom_client_utils import add_labels
 
 
 class _MetricRegistry:
     """Object for initiation and upkeep of metrics. Necessary to avoid assignment and labeling conflicts."""
+
     def __init__(self):
         self.labels = set()
+        self.current_labels = {}
         self.metrics_initialized = False
         self.categorical_metrics_initialized = False
-        self.current_labels = {}
-        self.DEFAULT_LATENCY_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25,
-                                        0.5, 0.75, 1., 2.5, 5., 7.5, 10., float('inf'))
-        self.DEFAULT_PROBA_BUCKETS = (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
+        self.metrics = SimpleNamespace()
+
+    def _add_metric(self, metric_type, name, description, additional_labels, **metric_kwargs):
+        additional_labels = additional_labels or tuple()
+        setattr(self.metrics, name, metric_type(name, description, tuple(self.labels) + additional_labels, **metric_kwargs))
+
+    def add_histogram(self, name, description, *, buckets, additional_labels=None):
+        self._add_metric(Histogram, name, description, additional_labels=additional_labels, buckets=buckets)
+
+    def add_counter(self, name, description, *, additional_labels=None):
+        self._add_metric(Counter, name, description, additional_labels=additional_labels)
+
+    def _init_metrics(self):
+        if self.metrics_initialized:
+            return
+        self.metrics_initialized = True
 
     def set_labels(self, labels):
         if self.metrics_initialized:
@@ -19,74 +36,28 @@ class _MetricRegistry:
 
         self.labels = set.union(self.labels, labels)
 
-    def _init_metrics(self):
-        if self.metrics_initialized:
-            return
-        self.metrics_initialized = True
-        self._model_predict = Counter(
-            "model_predict",
-            "Amount of instances that the model made predictions for.",
-            labelnames=tuple(self.labels)
-        )
-        self._model_predict_latency = Histogram(
-            "model_predict_latency_seconds",
-            "Time in seconds it takes to call `predict` on the model",
-            labelnames=tuple(self.labels),
-            buckets=self.DEFAULT_LATENCY_BUCKETS
-        )
-        self._model_predict_proba = Histogram(
-            "model_predict_probas",
-            "Prediction probability for each class of the model",
-            labelnames=tuple(self.labels) + ("class_",),
-            buckets=self.DEFAULT_PROBA_BUCKETS
-        )
-        self._model_exception = Counter(
-            "model_exception",
-            "Amount of exceptions during predict step.",
-            labelnames=tuple(self.labels)
-        )
-
-    def _init_categorical_metrics(self):
-        if self.categorical_metrics_initialized:
-            return
-        self.categorical_metrics_initialized = True
-        self._model_categorical = Counter(
-            "model_categorical",
-            "Counts category occurrence for each categorical feature.",
-            labelnames=tuple(self.labels) + ("feature", "category")
-        )
-
     def label(self, **labels):
         self.current_labels = labels
         return self
+
+    def __getattr__(self, item):
+        metric = getattr(self.metrics, item)
+        # note the order, only init metrics if we can actually find a metric with that name
+        self._init_metrics()
+
+        def with_labels(**additional_labels):
+            labels = dict(additional_labels, **self.current_labels)
+            if not labels:
+                return metric
+            return metric.labels(**labels)
+
+        return with_labels
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
-        self.current_labels = {}
-
-    def model_predict_total(self):
-        self._init_metrics()
-        return add_labels(self._model_predict, self.current_labels)
-
-    def model_predict_latency(self):
-        self._init_metrics()
-        return add_labels(self._model_predict_latency, self.current_labels)
-
-    def model_predict_proba(self, **labels):
-        self._init_metrics()
-        labels = dict(labels, **self.current_labels)
-        return add_labels(self._model_predict_proba, labels)
-
-    def model_exception(self):
-        self._init_metrics()
-        return add_labels(self._model_exception, self.current_labels)
-
-    def model_categorical(self, **labels):
-        self._init_categorical_metrics()
-        labels = dict(labels, **self.current_labels)
-        return add_labels(self._model_categorical, labels)
+        self.labels = {}
 
 
 MetricRegistry = _MetricRegistry()

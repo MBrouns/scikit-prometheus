@@ -1,3 +1,4 @@
+from prometheus_client import Histogram
 from sklearn import pipeline
 from sklearn.utils.metaestimators import available_if
 from skprometheus.prom_client_utils import observe_many
@@ -31,9 +32,29 @@ def make_pipeline(*steps, memory=None, verbose=False):
 
 
 class Pipeline(pipeline.Pipeline):
+    DEFAULT_LATENCY_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25,
+                                    0.5, 0.75, 1., 2.5, 5., 7.5, 10., float('inf'))
+    DEFAULT_PROBA_BUCKETS = (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
+
     """
     A pipeline that adds metrics to the prometheus metric registry.
     """
+    def __init__(self, steps, *, memory=None, verbose=False):
+        super().__init__(steps, memory=memory, verbose=verbose)
+        MetricRegistry.add_histogram(
+            "model_predict_latency_seconds",
+            "Time in seconds it takes to call `predict` on the model",
+            buckets=self.DEFAULT_LATENCY_BUCKETS
+        )
+
+        MetricRegistry.add_histogram(
+            "model_predict_probas",
+            "Prediction probability for each class of the model",
+            additional_labels=("class_",),
+            buckets=self.DEFAULT_PROBA_BUCKETS
+        )
+        MetricRegistry.add_counter('model_predict_total', "Amount of instances that the model made predictions for.")
+        MetricRegistry.add_counter('model_exception', "Amount of exceptions during predict step.")
 
     @available_if(_final_estimator_has("predict"))
     def predict(self, X, **predict_params):
@@ -42,7 +63,7 @@ class Pipeline(pipeline.Pipeline):
         prometheus metric registry.
         """
         try:
-            with MetricRegistry.model_predict_latency().time():
+            with MetricRegistry.model_predict_latency_seconds().time():
                 X_transformed = X
                 for _, _, transformer in self._iter(with_final=False):
                     X_transformed = transformer.transform(X_transformed)
@@ -53,7 +74,7 @@ class Pipeline(pipeline.Pipeline):
                     predict_probas = final_step.predict_proba(X_transformed, **predict_params)
                     for idx, class_ in enumerate(final_step.classes_):
                         observe_many(
-                            MetricRegistry.model_predict_proba(class_=class_),
+                            MetricRegistry.model_predict_probas(class_=class_),
                             predict_probas[:, idx]
                         )
                 predictions = final_step.predict(X_transformed, **predict_params)
