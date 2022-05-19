@@ -1,6 +1,5 @@
 import collections
 
-import numpy as np
 import pandas as pd
 from sklearn.utils import check_array
 
@@ -35,4 +34,3 @@ def get_feature_names(X):
     else:
         X = check_array(X, force_all_finite=False)
         return list(range(X.shape[1]))
-

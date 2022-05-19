@@ -5,7 +5,7 @@ from skprometheus.utils import flatten
 import numpy as np
 from prometheus_client import REGISTRY
 import pandas as pd
-from tests.conftest import general_checks, transformer_checks, select_tests, nonmeta_checks
+from tests.conftest import general_checks, transformer_checks, select_tests
 
 
 @pytest.mark.parametrize(

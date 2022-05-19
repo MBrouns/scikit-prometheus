@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.impute import SimpleImputer
-from sklearn.utils.validation import _get_feature_names
 
 from skprometheus.metrics import MetricRegistry
 from skprometheus.utils import get_feature_names
