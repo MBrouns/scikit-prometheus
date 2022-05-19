@@ -9,6 +9,7 @@ class _MetricRegistry:
     """Object for initiation and upkeep of metrics. Necessary to avoid assignment and labeling conflicts."""
 
     def __init__(self):
+        self.prefix = 'skprom_'
         self.labels = set()
         self.current_labels = {}
         self.metrics_initialized = False
@@ -17,7 +18,7 @@ class _MetricRegistry:
 
     def _add_metric(self, metric_type, name, description, additional_labels, **metric_kwargs):
         additional_labels = additional_labels or tuple()
-        setattr(self.metrics, name, metric_type(name, description, tuple(self.labels) + additional_labels, **metric_kwargs))
+        setattr(self.metrics, name, metric_type(self.prefix + name, description, tuple(self.labels) + additional_labels, **metric_kwargs))
 
     def add_histogram(self, name, description, *, buckets, additional_labels=None):
         self._add_metric(Histogram, name, description, additional_labels=additional_labels, buckets=buckets)
