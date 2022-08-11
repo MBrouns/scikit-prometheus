@@ -74,7 +74,7 @@ class ImputerCreated(type):
 
         # define __init__
         setattr(class_obj, '__init__', ImputerCreated.init(class_obj, bases[0]))
-        setattr(class_obj, 'transform', ImputerCreated.transform(bases[0]))
+        setattr(class_obj, 'transform', ImputerCreated.transform(class_obj, bases[0]))
 
         return class_obj
 
@@ -89,10 +89,10 @@ class ImputerCreated(type):
         return new_init
 
     @staticmethod
-    def transform(base):
+    def transform(class_obj, base):
         def new_transform(self, X):
             register_imputer_metrics(X, method=base.__name__)
-            return super().transform(X)
+            return super(class_obj, self).transform(X)
 
         return new_transform
 
@@ -100,3 +100,15 @@ class ImputerCreated(type):
 KNNImputer = ImputerCreated("KNNImputer", (impute.KNNImputer,), {})
 MissingIndicator = ImputerCreated("MissingIndicator", (impute.MissingIndicator,), {})
 SimpleImputer = ImputerCreated("SimpleImputer", (impute.SimpleImputer,), {})
+
+if __name__ == "__main__":
+    imputer = SimpleImputer()
+    X = np.array([
+        [np.nan, 3, 4, 6],
+        [np.nan, np.nan, 4, 5],
+        [np.nan, 5, 6, np.nan],
+        [np.nan, 0, 0, np.nan],
+        [np.nan, 7, 8, 9]
+    ])
+    imputer.fit(X)
+    imputer.transform(X)
