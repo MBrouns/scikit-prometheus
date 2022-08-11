@@ -1,28 +1,16 @@
-from types import SimpleNamespace
-
 import pytest
-from prometheus_client import REGISTRY
 from sklearn.utils import estimator_checks
 
-from skprometheus.metrics import MetricRegistry
+from tests.utils import pickle_load_populates_metric_registry, unregister_collectors
 
 
 @pytest.fixture(autouse=True)
-def unregister_collectors():
+def _unregister_collectors():
     """
     Fixture for cleaning registers before each test. Both prometheus_client.REGISTRY and
     skprometheus.metrics.MetricRegistry are cleaned.
     """
-    collectors = list(REGISTRY._collector_to_names.keys())
-    for collector in collectors:
-        REGISTRY.unregister(collector)
-
-    # Resetting attributes of MetricRegistry to avoid state transfer between tests
-    # TODO: Maybe find less ugly solution in future?
-    MetricRegistry.metrics_initialized = False
-    MetricRegistry.current_labels = {}
-    MetricRegistry.labels = set()
-    MetricRegistry.metrics = SimpleNamespace()
+    unregister_collectors()
 
 
 transformer_checks = (
@@ -32,6 +20,7 @@ transformer_checks = (
 )
 
 general_checks = (
+    pickle_load_populates_metric_registry,
     estimator_checks.check_fit2d_predict1d,
     estimator_checks.check_methods_subset_invariance,
     estimator_checks.check_fit2d_1sample,
