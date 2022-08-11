@@ -1,6 +1,6 @@
 import pytest
 
-from skprometheus.preprocessing import OneHotEncoder
+from skprometheus.preprocessing import OneHotEncoder, OrdinalEncoder
 import numpy as np
 from prometheus_client import REGISTRY
 import pandas as pd
@@ -77,3 +77,49 @@ def test_OneHotEncoder_missing():
     one_hot.transform(X_test)
 
     assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': '1', 'category': 'missing'}) == 2
+
+
+def test_OrdinalEncoder():
+    ordinal = OrdinalEncoder(handle_unknown ="use_encoded_value", unknown_value = np.nan)
+    x = np.array([['ndhbfg', 'akshf'],
+            ['abhvg', 'likrghfb'],
+            ['ndhbfg', 'lsbvjl']], dtype=np.str_)
+
+    ordinal.fit(x)
+    ordinal.transform(x)
+
+    assert 'skprom_model_categorical' in [m.name for m in REGISTRY.collect()]
+
+    assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': '0', 'category': 'ndhbfg'}) == 2
+    assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': '1', 'category': 'likrghfb'}) == 1
+
+
+def test_OrdinalEncoder_pandas():
+    ordinal_pd = OrdinalEncoder(handle_unknown ="use_encoded_value", unknown_value = np.nan)
+    x = np.array([['ndhbfg', 'akshf'],
+            ['abhvg', 'likrghfb'],
+            ['ndhbfg', 'lsbvjl']], dtype=np.str_)
+
+    df = pd.DataFrame.from_records(x, columns=['X', 'Y'])
+    ordinal_pd.fit(df)
+    ordinal_pd.transform(df)
+
+    assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': 'X', 'category': 'ndhbfg'}) == 2
+
+
+def test_OrdinalEncoder_missing():
+    ordinal = OrdinalEncoder(handle_unknown ="use_encoded_value", unknown_value = np.nan)
+    x = np.array([['ndhbfg', 'akshf'],
+            ['abhvg', 'likrghfb'],
+            ['ndhbfg', 'lsbvjl']], dtype=np.str_)
+
+    ordinal.fit(x)
+
+    x_test = np.array([['aaaa', 'bbb'],
+            ['abhvg', 'likrghfb'],
+            ['ndhbfg', 'lsbvjl']], dtype=np.str_)
+
+    ordinal.transform(x_test)
+
+    assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': '0', 'category': 'missing'}) == 1
+    assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': '1', 'category': 'missing'}) == 1
