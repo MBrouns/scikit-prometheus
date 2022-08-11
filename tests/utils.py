@@ -53,11 +53,11 @@ def metric_exists(metric_name, registry=REGISTRY):
 
 
 def pickle_load_populates_metric_registry(name, estimator):
-    metrics = set(REGISTRY._collector_to_names.keys())
+    metrics = {m._name for m in REGISTRY._collector_to_names.keys()}
     pkl = pickle.dumps(estimator)
     unregister_collectors()
     pickle.loads(pkl)
-    assert set(REGISTRY._collector_to_names.keys()) == metrics
+    assert {m._name for m in REGISTRY._collector_to_names.keys()} == metrics
 
 
 def unregister_collectors():
