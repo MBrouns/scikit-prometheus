@@ -1,6 +1,8 @@
 import pytest
+from itertools import product
+from typing import Callable
 
-from skprometheus.impute import SimpleImputer
+from skprometheus.impute import SimpleImputer, IterativeImputer, MissingIndicator, KNNImputer
 from skprometheus.utils import flatten
 import numpy as np
 from prometheus_client import REGISTRY
@@ -9,14 +11,16 @@ from tests.conftest import general_checks, transformer_checks, select_tests
 
 
 @pytest.mark.parametrize(
-    "test_fn",
-    select_tests(
-        flatten([general_checks, transformer_checks]),
+    "test_fn,trf",
+    product(
+        select_tests(
+            flatten([general_checks, transformer_checks]),
+        ),
+        [SimpleImputer(), IterativeImputer(), MissingIndicator(), KNNImputer()]
     )
 )
-def test_standard_checks(test_fn):
-    trf = SimpleImputer()
-    test_fn(SimpleImputer.__name__, trf)
+def test_standard_checks_simple_imputer(test_fn: Callable, trf):
+    test_fn(trf.__class__.__name__, trf)
 
 
 def test_simple_imputer():
