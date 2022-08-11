@@ -1,5 +1,4 @@
 import pytest
-from itertools import product
 
 from skprometheus.impute import SimpleImputer, MissingIndicator, KNNImputer
 from skprometheus.utils import flatten
@@ -27,7 +26,7 @@ def missing_values():
     "test_fn",
     select_tests(
         flatten([general_checks, transformer_checks]),
-    ), 
+    ),
 )
 @pytest.mark.parametrize(
     "trf",
@@ -49,9 +48,15 @@ def test_imputer(missing_values, method):
     imputer.transform(X)
     assert 'skprom_imputed' in [m.name for m in REGISTRY.collect()]
 
-    assert REGISTRY.get_sample_value('skprom_imputed_total', {'feature': '0', 'method': imputer.__class__.__name__}) == 5
-    assert REGISTRY.get_sample_value('skprom_imputed_total', {'feature': '1', 'method': imputer.__class__.__name__}) == 1
-    assert REGISTRY.get_sample_value('skprom_imputed_total', {'feature': '3', 'method': imputer.__class__.__name__}) == 2
+    assert REGISTRY.get_sample_value(
+        'skprom_imputed_total', {'feature': '0', 'method': imputer.__class__.__name__}
+        ) == 5
+    assert REGISTRY.get_sample_value(
+        'skprom_imputed_total', {'feature': '1', 'method': imputer.__class__.__name__}
+        ) == 1
+    assert REGISTRY.get_sample_value(
+        'skprom_imputed_total', {'feature': '3', 'method': imputer.__class__.__name__}
+        ) == 2
 
 
 @pytest.mark.parametrize(
@@ -68,6 +73,12 @@ def test_simple_imputer_pandas(missing_values, method):
     imputer.transform(df)
     assert 'skprom_imputed' in [m.name for m in REGISTRY.collect()]
 
-    assert REGISTRY.get_sample_value('skprom_imputed_total', {'feature': 'A', 'method': imputer.__class__.__name__}) == 5
-    assert REGISTRY.get_sample_value('skprom_imputed_total', {'feature': 'B', 'method': imputer.__class__.__name__}) == 1
-    assert REGISTRY.get_sample_value('skprom_imputed_total', {'feature': 'D', 'method': imputer.__class__.__name__}) == 2
+    assert REGISTRY.get_sample_value(
+        'skprom_imputed_total', {'feature': 'A', 'method': imputer.__class__.__name__}
+        ) == 5
+    assert REGISTRY.get_sample_value(
+        'skprom_imputed_total', {'feature': 'B', 'method': imputer.__class__.__name__}
+        ) == 1
+    assert REGISTRY.get_sample_value(
+        'skprom_imputed_total', {'feature': 'D', 'method': imputer.__class__.__name__}
+        ) == 2
