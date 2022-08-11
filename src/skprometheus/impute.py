@@ -2,9 +2,24 @@ from functools import wraps
 
 import numpy as np
 from sklearn import impute
+from sklearn.impute._base import _BaseImputer
 
 from skprometheus.metrics import MetricRegistry
 from skprometheus.utils import get_feature_names
+
+
+class _BaseSkPrometheusImputer(_BaseImputer):
+    def __init__(self, transformer):
+        self.transformer = transformer
+        super().__init__(missing_values=self.transformer.missing_values, add_indicator=self.transformer.add_indicator)
+
+    def transform(self):
+        pass
+
+
+class SimpleImputer(_BaseSkPrometheusImputer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(transformer=impute.SimpleImputer(*args, **kwargs))
 
 
 class SimpleImputer(impute.SimpleImputer):
