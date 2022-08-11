@@ -34,17 +34,6 @@ class SimpleImputer(impute.SimpleImputer):
         return super().transform(X)
 
 
-class IterativeImputer(impute.IterativeImputer):
-    @wraps(impute.IterativeImputer.__init__, assigned=["__signature__"])
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        MetricRegistry.add_counter("imputed", "the number of values imputed", additional_labels=("method", "feature"))
-
-    def transform(self, X):
-        register_imputer_metrics(X, method="IterativeImputer")
-        return super().transform(X)
-
-
 class MissingIndicator(impute.MissingIndicator):
     @wraps(impute.MissingIndicator.__init__, assigned=["__signature__"])
     def __init__(self, *args, **kwargs):
@@ -65,4 +54,3 @@ class KNNImputer(impute.KNNImputer):
     def transform(self, X):
         register_imputer_metrics(X, method="KNNImputer")
         return super().transform(X)
-
