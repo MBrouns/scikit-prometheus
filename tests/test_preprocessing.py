@@ -1,6 +1,6 @@
 import pytest
 
-from skprometheus.preprocessing import OneHotEncoder, OrdinalEncoder
+from skprometheus.preprocessing import OneHotEncoder, OrdinalEncoder, LabelEncoder
 import numpy as np
 from prometheus_client import REGISTRY
 import pandas as pd
@@ -123,3 +123,15 @@ def test_OrdinalEncoder_missing():
 
     assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': '0', 'category': 'missing'}) == 1
     assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': '1', 'category': 'missing'}) == 1
+
+def test_LabelEncoder():
+    label_enc = LabelEncoder()
+    Y = np.array(['A', 'B', 'C', 'B', 'E', 'D', 'E', 'E'], dtype = np.str_). reshape((-1, 1))
+
+    label_enc.fit(Y)
+    label_enc.transform(Y)
+
+    assert 'skprom_label_categorical' in [m.name for m in REGISTRY.collect()]
+
+    assert REGISTRY.get_sample_value('skprom_label_categorical_total', {'Y': 'A'}) == 1
+    assert REGISTRY.get_sample_value('skprom_label_categorical_total', {'Y': 'E'}) == 3

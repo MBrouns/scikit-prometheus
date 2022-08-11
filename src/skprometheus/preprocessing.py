@@ -1,3 +1,4 @@
+from tkinter import Y
 import numpy as np
 from functools import wraps
 
@@ -15,7 +16,15 @@ def feature_category_count(X, categories):
             if category is None:
                 category = "missing"
             MetricRegistry.model_categorical(feature=str(features[idx]), category=str(category)).inc()
-            
+
+
+def label_count(labels):
+
+    for label in labels:
+        if label[0] is None:
+            label[0] = "missing"
+        MetricRegistry.label_categorical(Y=str(label[0])).inc()
+           
 
 class OneHotEncoder(preprocessing.OneHotEncoder):
     """
@@ -71,3 +80,31 @@ class OrdinalEncoder(preprocessing.OrdinalEncoder):
         feature_category_count(X, categories)
 
         return transformed_X
+
+
+class LabelEncoder(preprocessing.OrdinalEncoder):
+    """
+    LabelEncoder that adds metrics to the prometheus metric registry.
+    """
+    @wraps(preprocessing.LabelEncoder.__init__, assigned=["__signature__"])
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        MetricRegistry.add_counter(
+            "label_categorical",
+            "Counts category occurrence for each target label.",
+            additional_labels=tuple("Y"),
+        )
+
+    def transform(self, Y):
+        """
+        Transform method that adds the count for each label to the prometheus
+        metric registry.
+        """
+        transformed_Y = super().transform(Y)
+
+        # Use inverse method on transformed_X to get all missing values back as 'None'
+        labels = self.inverse_transform(transformed_Y)
+
+        label_count(labels)
+
+        return transformed_Y
