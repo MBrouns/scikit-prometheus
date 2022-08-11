@@ -14,10 +14,7 @@ def feature_category_count(X, categories):
         for category in row:
             if category is None:
                 category = "missing"
-                MetricRegistry.model_categorical(feature=str(features[idx]), category=category).inc()
             MetricRegistry.model_categorical(feature=str(features[idx]), category=str(category)).inc()
-            
-
 
 
 class OneHotEncoder(preprocessing.OneHotEncoder):
