@@ -1,5 +1,3 @@
-from functools import wraps
-
 from sklearn import preprocessing
 from skprometheus.metrics import MetricRegistry
 from skprometheus.utils import get_feature_names
@@ -16,10 +14,6 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
             additional_labels=("feature", "category"),
         )
         return super(OneHotEncoder, cls).__new__(cls)
-
-    @wraps(preprocessing.OneHotEncoder.__init__, assigned=["__signature__"])
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def transform(self, X):
         """
