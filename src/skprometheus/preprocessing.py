@@ -1,5 +1,3 @@
-from functools import wraps
-
 from sklearn import preprocessing
 from skprometheus.metrics import MetricRegistry
 from skprometheus.utils import get_feature_names
@@ -9,14 +7,13 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
     """
     OneHotEncoder that adds metrics to the prometheus metric registry.
     """
-    @wraps(preprocessing.OneHotEncoder.__init__, assigned=["__signature__"])
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __new__(cls, *args, **kwargs):
         MetricRegistry.add_counter(
             "model_categorical",
             "Counts category occurrence for each categorical feature.",
             additional_labels=("feature", "category"),
         )
+        return super(OneHotEncoder, cls).__new__(cls)
 
     def transform(self, X):
         """
