@@ -20,11 +20,6 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
     @wraps(preprocessing.OneHotEncoder.__init__, assigned=["__signature__"])
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        MetricRegistry.add_counter(
-            "model_categorical",
-            "Counts category occurrence for each categorical feature.",
-            additional_labels=("feature", "category"),
-        )
 
     def transform(self, X):
         """
