@@ -80,10 +80,10 @@ def test_OneHotEncoder_missing():
 
 
 def test_OrdinalEncoder():
-    ordinal = OrdinalEncoder(handle_unknown ="use_encoded_value", unknown_value = np.nan)
+    ordinal = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=np.nan)
     x = np.array([['ndhbfg', 'akshf'],
-            ['abhvg', 'likrghfb'],
-            ['ndhbfg', 'lsbvjl']], dtype=np.str_)
+                ['abhvg', 'likrghfb'],
+                ['ndhbfg', 'lsbvjl']], dtype=np.str_)
 
     ordinal.fit(x)
     ordinal.transform(x)
@@ -95,10 +95,10 @@ def test_OrdinalEncoder():
 
 
 def test_OrdinalEncoder_pandas():
-    ordinal_pd = OrdinalEncoder(handle_unknown ="use_encoded_value", unknown_value = np.nan)
+    ordinal_pd = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=np.nan)
     x = np.array([['ndhbfg', 'akshf'],
-            ['abhvg', 'likrghfb'],
-            ['ndhbfg', 'lsbvjl']], dtype=np.str_)
+                ['abhvg', 'likrghfb'],
+                ['ndhbfg', 'lsbvjl']], dtype=np.str_)
 
     df = pd.DataFrame.from_records(x, columns=['X', 'Y'])
     ordinal_pd.fit(df)
@@ -108,16 +108,16 @@ def test_OrdinalEncoder_pandas():
 
 
 def test_OrdinalEncoder_missing():
-    ordinal = OrdinalEncoder(handle_unknown ="use_encoded_value", unknown_value = np.nan)
+    ordinal = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=np.nan)
     x = np.array([['ndhbfg', 'akshf'],
-            ['abhvg', 'likrghfb'],
-            ['ndhbfg', 'lsbvjl']], dtype=np.str_)
+                ['abhvg', 'likrghfb'],
+                ['ndhbfg', 'lsbvjl']], dtype=np.str_)
 
     ordinal.fit(x)
 
-    x_test = np.array([['aaaa', 'bbb'],
-            ['abhvg', 'likrghfb'],
-            ['ndhbfg', 'lsbvjl']], dtype=np.str_)
+    x_test = np.array([['aaaa', 'bbbvbg'],
+                    ['abhvg', 'likrghfb'],
+                    ['ndhbfg', 'lsbvjl']], dtype=np.str_)
 
     ordinal.transform(x_test)
 
