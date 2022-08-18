@@ -37,6 +37,7 @@ def test_OneHotEncoder():
 
     assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': '2', 'category': '4'}) == 2
     assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': '3', 'category': '9'}) == 1
+    assert REGISTRY.get_sample_value('skprom_model_categorical_total', {'feature': '3', 'category': '0'}) == 1
 
 
 def test_OneHotEncoder_pandas():

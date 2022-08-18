@@ -31,7 +31,7 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
 
         for idx, row in enumerate(categories.T):
             for category in row:
-                if not category:
+                if category is None:
                     category = "missing"
                 MetricRegistry.model_categorical(feature=str(features[idx]), category=str(category)).inc()
 
