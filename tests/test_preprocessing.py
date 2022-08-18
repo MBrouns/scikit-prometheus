@@ -16,9 +16,23 @@ from tests.conftest import general_checks, select_tests, transformer_checks
         exclude=["check_fit2d_predict1d"],
     )
 )
-def test_standard_checks(test_fn):
+
+def test_standard_checks_OneHot(test_fn):
     trf = OneHotEncoder()
     test_fn(OneHotEncoder.__name__, trf)
+
+
+@pytest.mark.parametrize(
+    "test_func",
+    select_tests(
+        flatten([general_checks, transformer_checks]),
+        exclude=["check_fit2d_predict1d"],
+    )
+)
+
+def test_standard_checks_Ordinal(test_func):
+    trf = OrdinalEncoder()
+    test_func(OrdinalEncoder.__name__, trf)
 
 
 def test_OneHotEncoder():
@@ -135,3 +149,18 @@ def test_LabelEncoder():
 
     assert REGISTRY.get_sample_value('skprom_label_categorical_total', {'Y': 'A'}) == 1
     assert REGISTRY.get_sample_value('skprom_label_categorical_total', {'Y': 'E'}) == 3
+
+
+def test_LabelEncoder_missing():
+    label_enc = LabelEncoder(handle_unknown="use_encoded_value", unknown_value=np.nan)
+    Y = np.array(['A', 'B', 'C', 'B', 'E', 'D', 'E', 'E'], dtype = np.str_). reshape((-1, 1))
+
+    Y_test = np.array(['A', 'B', 'C', 'B', 'E', 'D', 'F', 'E'], dtype = np.str_). reshape((-1, 1))
+
+    label_enc.fit(Y)
+    label_enc.transform(Y_test)
+
+    assert 'skprom_label_categorical' in [m.name for m in REGISTRY.collect()]
+
+    assert REGISTRY.get_sample_value('skprom_label_categorical_total', {'Y': 'A'}) == 1
+    assert REGISTRY.get_sample_value('skprom_label_categorical_total', {'Y': 'missing'}) == 1
