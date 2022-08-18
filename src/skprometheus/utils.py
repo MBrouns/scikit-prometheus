@@ -32,5 +32,5 @@ def get_feature_names(X):
     if isinstance(X, pd.DataFrame):
         return X.columns
     else:
-        X = check_array(X, force_all_finite=False)
+        X = check_array(X, dtype=None, force_all_finite=False)
         return list(range(X.shape[1]))
